@@ -26,6 +26,7 @@ data/
 *.jpeg
 *.png
 !data/.gitkeep
+!assets/*.png
 
 # 模型权重
 *.pth

@@ -79,6 +79,8 @@ We propose a multimodal framework based on **ConvNeXt-Tiny**, comprising three k
                           |  8-class output
 ```
 
+![Model Architecture](assets/architecture.png)
+
 Although Transformer architectures have demonstrated success in NLP tasks, we argue that their direct application to medical image analysis faces three fundamental limitations: (a) global attention mechanisms struggle to capture localized pathological features in dermoscopic images, (b) quadratic computational complexity with increasing resolution, and (c) overfitting tendencies in small-sample scenarios. **ConvNeXt-Tiny** was chosen as a modern convolutional network that not only retains convolution's advantage in capturing local visual details but also enhances global feature association and long-range information modeling capabilities through designs inspired by Transformers.
 
 ### Cross-Modal Attention Pooling (CMAP) -- Core Innovation
@@ -107,7 +109,15 @@ The CMAP module is the key technical contribution. Given image region features *
 
 **Step 6 -- Post-processing**: Fused features undergo FC -> BatchNorm -> GELU -> Dropout(0.3) to yield the final representation for downstream classification.
 
-This attention mechanism ensures the model can **selectively focus on the most relevant visual cues conditioned on patient metadata**, leading to more robust and interpretable decision-making. For example, for a 30-year-old female patient with an upper extremity lesion, the model assigns high attention weights (0.144-0.166) to the lesion core and edge transition zones while ignoring irrelevant skin areas, leveraging the benign prior of "young female + upper extremity" to classify correctly as Nevus (NV). For an 80-year-old male with a head/neck lesion, attention scatters across multiple texture-abnormal regions, combining the prior of "elderly male + head/neck" to identify seborrheic keratosis (BKL) based on aging skin patterns.
+This attention mechanism ensures the model can **selectively focus on the most relevant visual cues conditioned on patient metadata**, leading to more robust and interpretable decision-making.
+
+**Case 1 (Fig. 2)** : 30-year-old female, upper extremity lesion → predicted as Nevus (NV). The model assigns high attention weights (0.144-0.166) to the lesion core and edge transition zones while ignoring irrelevant skin areas, leveraging the benign prior of "young female + upper extremity."
+
+![Attention Visualization Case 1](assets/attention_visualization_1.png)
+
+**Case 2 (Fig. 3)** : 80-year-old male, head/neck lesion → predicted as Seborrheic Keratosis (BKL). Attention scatters across multiple texture-abnormal regions, combining the prior of "elderly male + head/neck" to identify BKL based on aging skin patterns.
+
+![Attention Visualization Case 2](assets/attention_visualization_2.png)
 
 ### Loss Function
 
@@ -251,6 +261,10 @@ ConvNeXt-Tiny leads comprehensively in accuracy, precision, recall, and F1-score
 |------------------------|----------|--------|-----------|--------|--------|
 | Simple Concatenation   | 0.8810   | 0.9516 | 0.8506    | 0.8278 | 0.8383 |
 | **CMAP (This work)**   | **0.8909** | **0.9563** | **0.8732** | **0.8517** | **0.8619** |
+
+![CMAP Confusion Matrix](assets/confusion_matrix_cmap.png)
+
+![Simple Concatenation Confusion Matrix](assets/comparison.png)
 
 ### Why CMAP Outperforms Simple Concatenation
 
