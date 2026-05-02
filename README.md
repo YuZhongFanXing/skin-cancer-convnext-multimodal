@@ -85,29 +85,29 @@ Although Transformer architectures have demonstrated success in NLP tasks, we ar
 
 ### Cross-Modal Attention Pooling (CMAP) -- Core Innovation
 
-The CMAP module is the key technical contribution. Given image region features **R** in R^(BxNxDR) (B=batch, N=16 regions, DR=256) and metadata features **M** in R^(BxDM) (DM=128):
+The CMAP module is the key technical contribution. Given image region features $\mathbf{R} \in \mathbb{R}^{B \times N \times D_R}$ (B=batch, N=16 regions, $D_R$=256) and metadata features $\mathbf{M} \in \mathbb{R}^{B \times D_M}$ ($D_M$=128):
 
-**Step 1 -- Metadata Expansion**: M is expanded to match N image regions, producing **M_exp** in R^(BxNxDM).
+**Step 1 — Metadata Expansion**: $\mathbf{M}$ is expanded to match $N$ image regions, producing $\mathbf{M}_{\text{exp}} \in \mathbb{R}^{B \times N \times D_M}$.
 
-**Step 2 -- Feature Concatenation** (Equation 4): For each region i, concatenate image region feature r_i with expanded metadata m_exp,i:
+**Step 2 — Feature Concatenation** (Equation 4): For each region $i$, concatenate image region feature $\mathbf{r}_i$ with expanded metadata $\mathbf{m}_{\text{exp},i}$:
 
-> **C_i = [r_i ; m_exp,i]**  in  R^(DR+DM)
+$$\mathbf{C}_i = [\mathbf{r}_i; \mathbf{m}_{\text{exp},i}] \in \mathbb{R}^{D_R + D_M}$$
 
-**Step 3 -- Attention Score Calculation** (Equation 5): Combined features pass through a two-layer MLP with GELU activation:
+**Step 3 — Attention Score Calculation** (Equation 5): Combined features pass through a two-layer MLP with GELU activation:
 
-> **s_i = AttentionNet(C_i)**
->
-> where AttentionNet = Linear(DR+DM, hidden) -> GELU -> Linear(hidden, 1)
+$$s_i = \text{AttentionNet}(\mathbf{C}_i)$$
 
-**Step 4 -- Softmax Normalization** (Equation 6): Raw scores normalized across all N regions:
+where $\text{AttentionNet} = \text{Linear}(D_R + D_M, H) \to \text{GELU} \to \text{Linear}(H, 1)$.
 
-> **w_i = exp(s_i) / sum_j exp(s_j)**
+**Step 4 — Softmax Normalization** (Equation 6): Raw scores normalized across all $N$ regions:
 
-**Step 5 -- Weighted Feature Aggregation** (Equation 7): A single fused feature vector F is produced by weighted summation:
+$$w_i = \frac{\exp(s_i)}{\sum_{j=1}^{N} \exp(s_j)}$$
 
-> **F = sum_i w_i * C_i**  in  R^(DR+DM)
+**Step 5 — Weighted Feature Aggregation** (Equation 7): A single fused feature vector $\mathbf{F}$ is produced by weighted summation:
 
-**Step 6 -- Post-processing**: Fused features undergo FC -> BatchNorm -> GELU -> Dropout(0.3) to yield the final representation for downstream classification.
+$$\mathbf{F} = \sum_{i=1}^{N} w_i \cdot \mathbf{C}_i \in \mathbb{R}^{D_R + D_M}$$
+
+**Step 6 — Post-processing**: Fused features undergo $\text{FC} \to \text{BatchNorm} \to \text{GELU} \to \text{Dropout}(0.3)$ to yield the final representation for downstream classification.
 
 This attention mechanism ensures the model can **selectively focus on the most relevant visual cues conditioned on patient metadata**, leading to more robust and interpretable decision-making.
 
@@ -123,15 +123,15 @@ This attention mechanism ensures the model can **selectively focus on the most r
 
 To address the severe class imbalance in skin lesion classification (e.g., NV: 12,875 vs. DF: 239), we employ a **weighted cross-entropy loss** (Equation 1):
 
-> L_CE = - sum_c **w_c** * y_c * log(p_c)
+$$\mathcal{L}_{\text{CE}} = -\sum_{c=1}^{C} w_c \cdot \hat{y}_c \cdot \log(p_c)$$
 
-where **w_c** = total_samples / class_samples (inverse frequency weighting), amplifying the contribution of minority classes during training.
+where $w_c = \frac{N_{\text{total}}}{N_c}$ (inverse frequency weighting), amplifying the contribution of minority classes during training.
 
 Additionally, **label smoothing regularization** is applied to prevent overconfidence (Equation 2):
 
-> y_c^smooth = (1 - epsilon) * y_c + epsilon / C
+$$\hat{y}_c^{\text{smooth}} = (1 - \epsilon) \cdot \hat{y}_c + \frac{\epsilon}{C}$$
 
-where epsilon = 0.1 is the smoothing factor and C = 8 classes.
+where $\epsilon = 0.1$ is the smoothing factor and $C = 8$ classes.
 
 ---
 
