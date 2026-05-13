@@ -19,14 +19,16 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# 数据（不提交 ISIC 数据集）
-data/
+# 数据 — 仅提交标注CSV和示例图片，完整图像集从ISIC Archive下载
+data/*
+!data/.gitkeep
+!data/*.csv
+!data/examples/
+!assets/*.png
 *.csv
 *.jpg
 *.jpeg
 *.png
-!data/.gitkeep
-!assets/*.png
 
 # 模型权重
 *.pth
