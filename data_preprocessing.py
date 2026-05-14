@@ -35,17 +35,6 @@ class ISICDataPreprocessor:
         self.class_weights = self.class_weights / self.class_weights.sum()
 
     def _preprocess_metadata(self):
-        # 元数据预处理逻辑
-        if 'age_approx' not in self.df.columns:
-            self.df['age_approx'] = np.nan
-        if 'sex' not in self.df.columns:
-            self.df['sex'] = 'unknown'
-
-        anatomy_col = 'anatom_site_general'
-        if anatomy_col not in self.df.columns and 'anatom_site_general_challenge' in self.df.columns:
-            anatomy_col = 'anatom_site_general_challenge'
-        if anatomy_col not in self.df.columns:
-            self.df[anatomy_col] = 'unknown'
 
         # 处理缺失值
         age_median = self.df['age_approx'].median()
